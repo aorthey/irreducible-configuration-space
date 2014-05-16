@@ -8,6 +8,7 @@ from hpp.corbaserver.client import Client as WsClient
 from hrp2 import Robot
 import rospy
 import numpy
+import math
 
 class ProjectedVolume ():
         def __init__ (self):
@@ -21,13 +22,40 @@ class ProjectedVolume ():
                 self.q2 = [0.0, 0.0, 0.705, 1, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 1.0, 0, -1.4, -1.0, 0.0, 0.0, 0.174532, -0.174532, 0.174532, -0.174532, 0.174532, -0.174532, 0.261799, -0.17453, 0.0, -0.523599, 0.0, 0.0, 0.174532, -0.174532, 0.174532, -0.174532, 0.174532, -0.174532, 0.0, 0.0, -0.453786, 0.872665, -0.418879, 0.0, 0.0, 0.0, -0.453786, 0.872665, -0.418879, 0.0]
                 self.q = self.q0
                 self.distanceToProjection = 1
+                self.vol_cvx_hull = []
 
         def setConfig(self,q):
                 self.q = q
                 self.robot.setCurrentConfig(self.q)
 
         def setRandomConfig(self):
-                self.robot.setCurrentConfig(qrand)
+                #set random configuration, but do not change the CoM
+                self.q_old = self.q
+                self.q = self.robot.getRandomConfig()
+                self.q[:8]=self.q_old[:8] 
+
+                self.robot.setCurrentConfig(self.q)
+
+        def volume_sorted_cvx_hull(self, hull):
+                #assume that hull are points on a convex hull, which are sorted
+                # counter-clockwise.
+                volume = 0
+                x1 = numpy.array(hull[0][0],hull[0][1])
+                for i in range(0,len(hull)-1):
+                        x2 = numpy.array(hull[i][0],hull[i][1])
+                        x3 = numpy.array(hull[i+1][0],hull[i+1][1])
+                        #compute base length
+                        b = numpy.linalg.norm(x1-x2)
+                        #compute height by computing distance of x3 to line
+                        #between x1 and x2
+                        n = x2-x1
+                        p = x3-x1
+                        h_vec = p - numpy.dot(p,n)*n
+                        h = numpy.linalg.norm(h_vec)
+                        d = 0.5*b*h
+                        volume = volume + d
+                return volume
+                
 
         def displayConvexHullProjection(self):
                 from scipy.spatial.qhull import Delaunay
@@ -41,23 +69,21 @@ class ProjectedVolume ():
                 self.cap2dhash = map(tuple, self.cap2d)
                 self.hull = convex_hull(self.cap2dhash)
 
+                #compute volume
+                self.vol_cvx_hull.append(self.volume_sorted_cvx_hull(self.hull))
+                print self.vol_cvx_hull
+
                 r = rospy.Rate(1)
                 r.sleep()
-                #for i in range(0,len(self.hull),1):
-                #        self.scene_publisher.addSphere(0.5,
-                #                        self.hull[i][0],
-                #                        self.hull[i][1],
-                #                        0.5,
-                #                        0.01,
-                #                        0.01)
-                #self.scene_publisher.addPolygon(self.distanceToProjection, self.hull)
+                self.scene_publisher.oid = 0
                 self.scene_publisher.addPolygonFilled(self.distanceToProjection, self.hull)
+                self.scene_publisher.addPolygon(self.distanceToProjection, self.hull)
                 self.scene_publisher.publishObjects()
-                r.sleep()
                 r.sleep()
 
         def computeConvexHullProjection(self):
-                self.q_grad = self.robot.gradientConfigurationWrtProjection (self.q)
+                self.q_grad = self.robot.projectConfigurationUntilIrreducible (self.q)
+                self.q_grad_raw = self.q_grad
                 self.q_grad.insert(3,0)
                 self.q_grad[0]=0
                 self.q_grad[1]=0
@@ -76,6 +102,7 @@ class ProjectedVolume ():
                 r = rospy.Rate(1)
                 r.sleep()
                 self.scene_publisher(self.q)
+
         def computeCapsuleProjection(self):
                 capsulePos = self.robot.computeVolume()
                 #access 3 elements at a time (x,y,z)
