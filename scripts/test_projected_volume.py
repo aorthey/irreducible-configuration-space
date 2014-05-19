@@ -10,6 +10,11 @@ pv.setRandomConfig()
 #pv.computeConvexHull()
 
 for i in range(1,10):
-        pv.computeConvexHullProjection()
-        pv.computeCapsuleProjection()
-        pv.displayConvexHullProjection()
+        #project to irreducibility => compute capsules => project capsules onto
+        #plane => compute convex hull of capsules => display convex hull
+        pv.projectConfigurationUntilIrreducible()
+        pv.projectOntoConstraintManifold()
+        pv.computeCapsulesFromConfiguration()
+        pv.computeConvexHullOfProjectedCapsules()
+        pv.displayRobot()
+        pv.displayConvexHullOfProjectedCapsules()
