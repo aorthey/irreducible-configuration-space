@@ -57,7 +57,16 @@ class ProjectedVolume ():
                 return volume
                 
 
-        def displayConvexHullProjection(self):
+        def displayConvexHullOfProjectedCapsules(self):
+                r = rospy.Rate(1)
+                r.sleep()
+                self.scene_publisher.oid = 0
+                self.scene_publisher.addPolygonFilled(self.distanceToProjection, self.hull)
+                self.scene_publisher.addPolygon(self.distanceToProjection, self.hull)
+                self.scene_publisher.publishObjects()
+                r.sleep()
+
+        def computeConvexHullOfProjectedCapsules(self):
                 from scipy.spatial.qhull import Delaunay
                 from convex_hull import convex_hull
 
@@ -68,20 +77,11 @@ class ProjectedVolume ():
                 #make cap2d hashable
                 self.cap2dhash = map(tuple, self.cap2d)
                 self.hull = convex_hull(self.cap2dhash)
-
                 #compute volume
                 self.vol_cvx_hull.append(self.volume_sorted_cvx_hull(self.hull))
                 print self.vol_cvx_hull
 
-                r = rospy.Rate(1)
-                r.sleep()
-                self.scene_publisher.oid = 0
-                self.scene_publisher.addPolygonFilled(self.distanceToProjection, self.hull)
-                self.scene_publisher.addPolygon(self.distanceToProjection, self.hull)
-                self.scene_publisher.publishObjects()
-                r.sleep()
-
-        def computeConvexHullProjection(self):
+        def projectConfigurationUntilIrreducible(self):
                 self.q_grad = self.robot.projectConfigurationUntilIrreducible (self.q)
                 self.q_grad_raw = self.q_grad
                 self.q_grad.insert(3,0)
@@ -96,14 +96,15 @@ class ProjectedVolume ():
                 self.q_new = [x+y for x,y in zip(self.q,self.q_grad)]
                 print self.q_new[0:8]
                 self.setConfig(self.q_new)
-                self.displayRobot()
                 
         def displayRobot(self):
                 r = rospy.Rate(1)
                 r.sleep()
                 self.scene_publisher(self.q)
 
-        def computeCapsuleProjection(self):
+        def projectOntoConstraintManifold(self):
+
+        def computeCapsulesFromConfiguration(self):
                 capsulePos = self.robot.computeVolume()
                 #access 3 elements at a time (x,y,z)
                 self.capsule = numpy.empty((len(capsulePos)/5, 5))
@@ -113,7 +114,7 @@ class ProjectedVolume ():
                         self.capsule[ctr] = numpy.array(capsulePos[i:i+5])
                         ctr+=1
 
-        def displayCapsuleProjection(self):
+        def displayCapsulesProjectedOntoPlane(self):
                 r = rospy.Rate(1)
                 r.sleep()
                 self.scene_publisher(self.q)
