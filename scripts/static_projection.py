@@ -32,11 +32,11 @@ cl.problem.setNumericalConstraints ("balance", ["balance/relative-com",
 # lock hands in closed position
 lockedDofs = robot.leftHandClosed ()
 for name, value in lockedDofs.iteritems ():
-    cl.problem.lockDof (name, value)
+    cl.problem.lockDof (name, value, 0, 0)
 
 lockedDofs = robot.rightHandClosed ()
 for name, value in lockedDofs.iteritems ():
-    cl.problem.lockDof (name, value)
+    cl.problem.lockDof (name, value, 0, 0)
 
 
 q1 = [0.0, 0.0, 0.705, 1.0, 0., 0., 0.0, 0.0, 0.0, 0.0, 0.0, -0.4, 0, -1.2, -1.0, 0.0, 0.0, 0.174532, -0.174532, 0.174532, -0.174532, 0.174532, -0.174532, 0.261799, -0.17453, 0.0, -0.523599, 0.0, 0.0, 0.174532, -0.174532, 0.174532, -0.174532, 0.174532, -0.174532, 0.0, 0.0, -0.453786, 0.872665, -0.418879, 0.0, 0.0, 0.0, -0.453786, 0.872665, -0.418879, 0.0]
@@ -54,12 +54,11 @@ var4 = var1 + var2
 print 'vars=', var1, var2, var3, var4
 
 q2proj = cl.problem.createPositionConstraints (q2, var1, var2, var3)
+#q2proj = cl.problem.applyConstraints (q2)
 #cl.problem.setInitialConfig (q1proj)
 #cl.problem.addGoalConfig (q2proj)
 #cl.problem.solve ()
 
-r(q2proj)
-r(q2proj)
 r(q2proj)
 r(q2proj)
 r(q2proj)
@@ -68,5 +67,5 @@ time.sleep(1)
 
 r(q2proj)
 
-#p = PathPlayer (cl, r)
-#p (1)
+p = PathPlayer (cl, r)
+p (1)
