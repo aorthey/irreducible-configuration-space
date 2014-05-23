@@ -1,7 +1,8 @@
 HPP_REPO=https://github.com/humanoid-path-planner
 HPP_REPO_FORK=git@github.com:orthez
 SRC_DIR=${DEVEL_DIR}/src
-HPP_SERVER=${DEVEL_DIR}/install/bin/hpp-wholebody-step-server
+#HPP_SERVER=${DEVEL_DIR}/install/bin/hpp-wholebody-step-server
+HPP_SERVER=${DEVEL_DIR}/install/bin/hppcorbaserver
 BUILD_TYPE=Debug
 
 hpp-corbaserver_branch=master

@@ -36,6 +36,9 @@ class ProjectedVolume ():
 
                 self.robot.setCurrentConfig(self.q)
 
+        def projectOntoConstraintManifold(self):
+                self.q = self.cl.problem.createPositionConstraints (self.q)
+
         def volume_sorted_cvx_hull(self, hull):
                 #assume that hull are points on a convex hull, which are sorted
                 # counter-clockwise.
@@ -101,8 +104,6 @@ class ProjectedVolume ():
                 r = rospy.Rate(1)
                 r.sleep()
                 self.scene_publisher(self.q)
-
-        def projectOntoConstraintManifold(self):
 
         def computeCapsulesFromConfiguration(self):
                 capsulePos = self.robot.computeVolume()
