@@ -4,7 +4,8 @@ from hpp.corbaserver import Client
 from hpp_corbaserver.hpp import Configuration
 from hpp_ros import ScenePublisher
 from hpp.tools import PathPlayer
-from hpp.corbaserver.client import Client as WsClient
+#from hpp.corbaserver.client import Client as WsClient
+from hpp.corbaserver.wholebody_step.client import Client as WsClient
 from hrp2 import Robot
 import rospy
 import numpy
@@ -31,18 +32,17 @@ class ProjectedVolume ():
 
         def applyConstraints(self, q_in):
 
-                #self.wcl.problem.addStaticStabilityConstraints ("balance", q_in,
-                #self.robot_interface.leftAnkle, self.robot_interface.rightAnkle)
-##
-##                self.cl.problem.setNumericalConstraints ("balance",
-##                                ["balance/relative-com"])
-##                                                #"balance/relative-orientation",
-##                                                #"balance/relative-position",
-##                                                #"balance/orientation-left-foot",
-##                                                #"balance/position-left-foot"])
-##
+                self.wcl.problem.addStaticStabilityConstraints ("balance", q_in , "LLEG_JOINT5", "RLEG_JOINT5")
+
+                self.cl.problem.setNumericalConstraints ("balance",
+                                ["balance/relative-com"])
+                                                #"balance/relative-orientation",
+                                                #"balance/relative-position",
+                                                #"balance/orientation-left-foot",
+                                                #"balance/position-left-foot"])
+
                 #self.cl.problem.createPositionConstraint (q_in, "CHEST_JOINT0", "RLEG_JOINT5", 0, 0, 1);
-                #qproj = self.cl.problem.applyConstraints (q_in)
+                self.cl.problem.applyConstraints (q_in)
                 return q_in
 
         def setConfig(self, q_in):
