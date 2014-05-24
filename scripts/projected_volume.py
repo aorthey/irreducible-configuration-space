@@ -15,7 +15,12 @@ class ProjectedVolume ():
                 self.robot_interface = Robot ()
                 self.robot_interface.setTranslationBounds (-3, 3, -3, 3, 0, 1)
                 self.cl = self.robot_interface.client
-                self.robot = self.robot_interface.client.robot
+                self.wcl = WsClient ()
+
+                self.robot = self.cl.robot
+                self.precomputation = self.cl.precomputation
+                print self.precomputation.getNumberDof()
+
                 self.scene_publisher = ScenePublisher (self.robot_interface.jointNames [4:])
                 self.q0 = self.robot_interface.getInitialConfig ()
                 self.q1 = [0.0, 0.0, 0.705, 1.0, 0., 0., 0.0, 0.0, 0.0, 0.0, 0.0, -0.4, 0, -1.2, -1.0, 0.0, 0.0, 0.174532, -0.174532, 0.174532, -0.174532, 0.174532, -0.174532, 0.261799, -0.17453, 0.0, -0.523599, 0.0, 0.0, 0.174532, -0.174532, 0.174532, -0.174532, 0.174532, -0.174532, 0.0, 0.0, -0.453786, 0.872665, -0.418879, 0.0, 0.0, 0.0, -0.453786, 0.872665, -0.418879, 0.0]
@@ -24,8 +29,24 @@ class ProjectedVolume ():
                 self.distanceToProjection = 1
                 self.vol_cvx_hull = []
 
-        def setConfig(self,q):
-                self.q = q
+        def applyConstraints(self, q_in):
+
+                #self.wcl.problem.addStaticStabilityConstraints ("balance", q_in,
+                #self.robot_interface.leftAnkle, self.robot_interface.rightAnkle)
+##
+##                self.cl.problem.setNumericalConstraints ("balance",
+##                                ["balance/relative-com"])
+##                                                #"balance/relative-orientation",
+##                                                #"balance/relative-position",
+##                                                #"balance/orientation-left-foot",
+##                                                #"balance/position-left-foot"])
+##
+                #self.cl.problem.createPositionConstraint (q_in, "CHEST_JOINT0", "RLEG_JOINT5", 0, 0, 1);
+                #qproj = self.cl.problem.applyConstraints (q_in)
+                return q_in
+
+        def setConfig(self, q_in):
+                self.q = q_in
                 self.robot.setCurrentConfig(self.q)
 
         def setRandomConfig(self):
@@ -34,10 +55,9 @@ class ProjectedVolume ():
                 self.q = self.robot.getRandomConfig()
                 self.q[:8]=self.q_old[:8] 
 
-                self.robot.setCurrentConfig(self.q)
+                self.q = self.applyConstraints(self.q)
+                self.setConfig(self.q)
 
-        def projectOntoConstraintManifold(self):
-                self.q = self.cl.problem.createPositionConstraints (self.q)
 
         def volume_sorted_cvx_hull(self, hull):
                 #assume that hull are points on a convex hull, which are sorted
@@ -85,7 +105,7 @@ class ProjectedVolume ():
                 print self.vol_cvx_hull
 
         def projectConfigurationUntilIrreducible(self):
-                self.q_grad = self.robot.projectConfigurationUntilIrreducible (self.q)
+                self.q_grad = self.precomputation.projectConfigurationUntilIrreducible (self.q)
                 self.q_grad_raw = self.q_grad
                 self.q_grad.insert(3,0)
                 self.q_grad[0]=0
@@ -106,7 +126,7 @@ class ProjectedVolume ():
                 self.scene_publisher(self.q)
 
         def computeCapsulesFromConfiguration(self):
-                capsulePos = self.robot.computeVolume()
+                capsulePos = self.precomputation.computeVolume()
                 #access 3 elements at a time (x,y,z)
                 self.capsule = numpy.empty((len(capsulePos)/5, 5))
                 ctr = 0
