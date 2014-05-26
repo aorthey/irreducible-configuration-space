@@ -28,8 +28,11 @@ var2 = float(sys.argv[3])
 var3 = float(sys.argv[4])
 print 'vars=', var1, var2, var3
 
-reussite = cl.problem.createPositionConstraint ("position_absolute", sys.argv[1], "LARM_JOINT6", var1, var2, var3)
-#reussite = cl.problem.createPositionConstraint ("position_relative", "RARM_JOINT1", "LARM_JOINT0", var1, var2, var3)
+point1=[0,0,0]
+point2=[var1, var2, var3]
+
+
+reussite = cl.problem.createPositionConstraint ("position_absolute", sys.argv[1], "", point1, point2)
 
 wcl.problem.addStaticStabilityConstraints ("balance", q0, robot.leftAnkle,
                                            robot.rightAnkle)
@@ -38,7 +41,7 @@ cl.problem.setNumericalConstraints ("balance", ["balance/relative-com",
                                                 "balance/relative-position",
                                                 "balance/orientation-left-foot",
                                                 "balance/position-left-foot",
-						"position_absolute"])
+																								"position_absolute"])
 
 # lock hands in closed position11
 lockedDofs = robot.leftHandClosed ()
