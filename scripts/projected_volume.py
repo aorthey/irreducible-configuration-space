@@ -87,6 +87,7 @@ class ProjectedVolume ():
         def displayConvexHullOfProjectedCapsules(self):
                 self.hull = self.precomputation.getConvexHullCapsules()
                 self.hull = zip(*[iter(self.hull)]*3)
+                print self.precomputation.getVolume()
 
                 r = rospy.Rate(1)
                 r.sleep()
