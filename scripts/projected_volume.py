@@ -20,7 +20,6 @@ class ProjectedVolume ():
 
                 self.robot = self.cl.robot
                 self.precomputation = self.cl.precomputation
-                print self.precomputation.getNumberDof()
 
                 self.scene_publisher = ScenePublisher (self.robot_interface.jointNames [4:])
                 self.q0 = self.robot_interface.getInitialConfig ()
@@ -30,20 +29,25 @@ class ProjectedVolume ():
                 self.distanceToProjection = 1
                 self.vol_cvx_hull = []
 
-        def applyConstraints(self, q_in):
+        def projectOnConstraintsManifold(self, q_in):
 
                 self.wcl.problem.addStaticStabilityConstraints ("balance", q_in , "LLEG_JOINT5", "RLEG_JOINT5")
 
-                self.cl.problem.setNumericalConstraints ("balance",
-                                ["balance/relative-com"])
-                                                #"balance/relative-orientation",
-                                                #"balance/relative-position",
-                                                #"balance/orientation-left-foot",
-                                                #"balance/position-left-foot"])
+                #self.cl.problem.setNumericalConstraints ("balance",
+                                #["balance/relative-com",
+                                #"balance/relative-orientation",
+                                #"balance/relative-position",
+                                #"balance/orientation-left-foot",
+                                #"balance/position-left-foot"])
+                p1 = [0.0,0.0,1.0]
+                p2 = [0.0,0.0,1.0]
+                self.cl.problem.createPositionConstraint ("foot-on-floor", "LLEG_JOINT5", "RLEG_JOINT5", p1, p2)
+                #self.cl.problem.createPositionConstraint ("RARM", "RARM_JOINT5", "", p1, p2)
+                #self.cl.problem.createPositionConstraint ("LARM", "LARM_JOINT5", "", p1, p2)
 
-                #self.cl.problem.createPositionConstraint (q_in, "CHEST_JOINT0", "RLEG_JOINT5", 0, 0, 1);
-                self.cl.problem.applyConstraints (q_in)
-                return q_in
+                status, qproj, residual = self.cl.problem.applyConstraints (q_in)
+                print "Projection Error on constraints manifold: ",residual," successful: ", status
+                return qproj
 
         def setConfig(self, q_in):
                 self.q = q_in
@@ -55,57 +59,47 @@ class ProjectedVolume ():
                 self.q = self.robot.getRandomConfig()
                 self.q[:8]=self.q_old[:8] 
 
-                self.q = self.applyConstraints(self.q)
+                self.q = self.projectOnConstraintsManifold(self.q)
                 self.setConfig(self.q)
 
-
-        def volume_sorted_cvx_hull(self, hull):
-                #assume that hull are points on a convex hull, which are sorted
-                # counter-clockwise.
-                volume = 0
-                x1 = numpy.array(hull[0][0],hull[0][1])
-                for i in range(0,len(hull)-1):
-                        x2 = numpy.array(hull[i][0],hull[i][1])
-                        x3 = numpy.array(hull[i+1][0],hull[i+1][1])
-                        #compute base length
-                        b = numpy.linalg.norm(x1-x2)
-                        #compute height by computing distance of x3 to line
-                        #between x1 and x2
-                        n = x2-x1
-                        p = x3-x1
-                        h_vec = p - numpy.dot(p,n)*n
-                        h = numpy.linalg.norm(h_vec)
-                        d = 0.5*b*h
-                        volume = volume + d
-                return volume
+        #def volume_sorted_cvx_hull(self, hull):
+        #        #assume that hull are points on a convex hull, which are sorted
+        #        # counter-clockwise.
+        #        volume = 0
+        #        x1 = numpy.array(hull[0][0],hull[0][1])
+        #        for i in range(0,len(hull)-1):
+        #                x2 = numpy.array(hull[i][0],hull[i][1])
+        #                x3 = numpy.array(hull[i+1][0],hull[i+1][1])
+        #                #vectors between points
+        #                v12 = x2-x1
+        #                v13 = x3-x1
+        #                #compute base length
+        #                b = numpy.linalg.norm(v12)
+        #                #compute height by computing distance of x3 to line
+        #                #between x1 and x2
+        #                h_vec = v13 - numpy.dot(v13,v12)*v12
+        #                h = numpy.linalg.norm(h_vec)
+        #                d = 0.5*b*h
+        #                volume = volume + d
+        #        return volume
                 
 
         def displayConvexHullOfProjectedCapsules(self):
+                self.hull = self.precomputation.getConvexHullCapsules()
+                self.hull = zip(*[iter(self.hull)]*3)
+
                 r = rospy.Rate(1)
                 r.sleep()
                 self.scene_publisher.oid = 0
-                self.scene_publisher.addPolygonFilled(self.distanceToProjection, self.hull)
-                self.scene_publisher.addPolygon(self.distanceToProjection, self.hull)
+                #self.scene_publisher.addPolygonFilled(self.hull)
+                self.scene_publisher.addPolygon(self.hull, 0.05)
                 self.scene_publisher.publishObjects()
                 r.sleep()
 
-        def computeConvexHullOfProjectedCapsules(self):
-                from scipy.spatial.qhull import Delaunay
-                from convex_hull import convex_hull
-
-                #self.idx = numpy.concatenate([self.hull[:,0:1],self.hull[:,2:3]],1)
-                #use y,z coordinates only
-                self.cap2d = numpy.concatenate([self.capsule[:,1:2],self.capsule[:,2:3]],1) 
-
-                #make cap2d hashable
-                self.cap2dhash = map(tuple, self.cap2d)
-                self.hull = convex_hull(self.cap2dhash)
-                #compute volume
-                self.vol_cvx_hull.append(self.volume_sorted_cvx_hull(self.hull))
-                print self.vol_cvx_hull
-
         def projectConfigurationUntilIrreducible(self):
-                self.q_grad = self.precomputation.projectConfigurationUntilIrreducible (self.q)
+                self.precomputation.setCurrentConfiguration(self.q)
+
+                self.q_grad = self.precomputation.getGradient()
                 self.q_grad_raw = self.q_grad
                 self.q_grad.insert(3,0)
                 self.q_grad[0]=0
@@ -118,36 +112,10 @@ class ProjectedVolume ():
                 self.q_grad[6]=0
                 self.q_new = [x+y for x,y in zip(self.q,self.q_grad)]
                 print self.q_new[0:8]
+                self.q_new = self.projectOnConstraintsManifold(self.q_new)
                 self.setConfig(self.q_new)
                 
         def displayRobot(self):
                 r = rospy.Rate(1)
                 r.sleep()
                 self.scene_publisher(self.q)
-
-        def computeCapsulesFromConfiguration(self):
-                capsulePos = self.precomputation.computeVolume()
-                #access 3 elements at a time (x,y,z)
-                self.capsule = numpy.empty((len(capsulePos)/5, 5))
-                ctr = 0
-                for i in range(0,len(capsulePos),5):
-                        #capsule containts x,y,z,radius,length
-                        self.capsule[ctr] = numpy.array(capsulePos[i:i+5])
-                        ctr+=1
-
-        def displayCapsulesProjectedOntoPlane(self):
-                r = rospy.Rate(1)
-                r.sleep()
-                self.scene_publisher(self.q)
-                for i in range(0,len(self.capsule),1):
-                        self.scene_publisher.addSphere(self.distanceToProjection,
-                                        self.capsule[i][1],
-                                        self.capsule[i][2],
-                                        0.001,
-                                        self.capsule[i][3],
-                                        self.capsule[i][3]
-                                        )
-
-                self.scene_publisher.publishObjects()
-                r.sleep()
-                r.sleep()
