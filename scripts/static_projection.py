@@ -21,15 +21,29 @@ r (q0)
 
 # Add constraints
 wcl = WsClient ()
+
+
+var1 = float(sys.argv[2])
+var2 = float(sys.argv[3])
+var3 = float(sys.argv[4])
+print 'vars=', var1, var2, var3
+
+point1=[0,0,0]
+point2=[var1, var2, var3]
+
+
+reussite = cl.problem.createPositionConstraint ("position_absolute", sys.argv[1], "", point1, point2)
+
 wcl.problem.addStaticStabilityConstraints ("balance", q0, robot.leftAnkle,
                                            robot.rightAnkle)
 cl.problem.setNumericalConstraints ("balance", ["balance/relative-com",
                                                 "balance/relative-orientation",
                                                 "balance/relative-position",
                                                 "balance/orientation-left-foot",
-                                                "balance/position-left-foot"])
+                                                "balance/position-left-foot",
+																								"position_absolute"])
 
-# lock hands in closed position
+# lock hands in closed position11
 lockedDofs = robot.leftHandClosed ()
 for name, value in lockedDofs.iteritems ():
     cl.problem.lockDof (name, value, 0, 0)
@@ -41,33 +55,28 @@ for name, value in lockedDofs.iteritems ():
 
 #q1 = [0.0, 0.0, 0.705, 1.0, 0., 0., 0.0, 0.0, 0.0, 0.0, 0.0, -0.4, 0, -1.2, -1.0, 0.0, 0.0, 0.174532, -0.174532, 0.174532, -0.174532, 0.174532, -0.174532, 0.261799, -0.17453, 0.0, -0.523599, 0.0, 0.0, 0.174532, -0.174532, 0.174532, -0.174532, 0.174532, -0.174532, 0.0, 0.0, -0.453786, 0.872665, -0.418879, 0.0, 0.0, 0.0, -0.453786, 0.872665, -0.418879, 0.0]
 
-#(ret, q1proj, err) = cl.problem.applyConstraints (q1)
+(ret, q1proj, residualError) = cl.problem.applyConstraints (q0)
 
 #q2 = [0.0, 0.0, 0.705, 1, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 1.0, 0, -1.4, -1.0, 0.0, 0.0, 0.174532, -0.174532, 0.174532, -0.174532, 0.174532, -0.174532, 0.261799, -0.17453, 0.0, -0.523599, 0.0, 0.0, 0.174532, -0.174532, 0.174532, -0.174532, 0.174532, -0.174532, 0.0, 0.0, -0.453786, 0.872665, -0.418879, 0.0, 0.0, 0.0, -0.453786, 0.872665, -0.418879, 0.0]
 
 
-var1 = float(sys.argv[2])
-var2 = float(sys.argv[3])
-var3 = float(sys.argv[4])
-
-print 'vars=', var1, var2, var3
-(reussite, q2proj, erreur) = cl.problem.createPositionConstraints (q0, "RLEG_JOINT0", sys.argv[1], var1, var2, var3)
 #q2proj = cl.problem.applyConstraints (q2)
 #cl.problem.setInitialConfig (q1proj)
 #cl.problem.addGoalConfig (q2proj)
 #cl.problem.solve ()
 
 
-
-r(q2proj)
-r(q2proj)
-r(q2proj)
+q = robot.client.robot.getCurrentConfig()
+r(q)
+r(q)
+r(q)
+r(q)
 
 time.sleep(1)
 
-r(q2proj)
+r(q)
 
-print 'reussite=', reussite, '   erreur=', erreur
+print 'reussite=', reussite, '   erreur=', residualError
 
 
 #p = PathPlayer (cl, r)
