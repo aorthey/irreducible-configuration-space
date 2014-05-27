@@ -34,6 +34,12 @@ class ProjectedVolume ():
                 self.cl.problem.setNumericalConstraints ("natural-constraints", cnames)
                 print cnames
 
+        def displayRandomConvexHull(self):
+                self.setRandomConfig()
+                self.projectConfigurationUntilIrreducible()
+                self.displayRobot()
+                self.displayConvexHullOfProjectedCapsules()
+
         def projectOnConstraintsManifold(self, q_in):
 
                 #["balance/relative-com",
