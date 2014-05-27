@@ -31,8 +31,13 @@ print 'vars=', var1, var2, var3
 point1=[0,0,0]
 point2=[var1, var2, var3]
 
+rotation=[1.5, 0, 0]
+
+reussite = cl.problem.createOrientationConstraint ("orientation_relative", "LARM_JOINT6", "RARM_JOINT6", rotation)
 
 reussite = cl.problem.createPositionConstraint ("position_absolute", sys.argv[1], "", point1, point2)
+
+
 
 wcl.problem.addStaticStabilityConstraints ("balance", q0, robot.leftAnkle,
                                            robot.rightAnkle)
@@ -41,6 +46,7 @@ cl.problem.setNumericalConstraints ("balance", ["balance/relative-com",
                                                 "balance/relative-position",
                                                 "balance/orientation-left-foot",
                                                 "balance/position-left-foot",
+																								"orientation_relative",
 																								"position_absolute"])
 
 # lock hands in closed position11
@@ -76,7 +82,7 @@ time.sleep(1)
 
 r(q)
 
-print 'reussite=', reussite, '   erreur=', residualError
+print 'reussite=', ret, '   erreur=', residualError
 
 
 #p = PathPlayer (cl, r)
