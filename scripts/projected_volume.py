@@ -29,22 +29,20 @@ class ProjectedVolume ():
                 self.distanceToProjection = 1
                 self.vol_cvx_hull = []
 
+                #self.wcl.problem.addStaticStabilityConstraints ("balance", self.q , "LLEG_JOINT5", "RLEG_JOINT5")
+                cnames = self.cl.precomputation.addNaturalConstraints ( "natural-constraints" , self.q, "LLEG_JOINT5", "RLEG_JOINT5")
+                self.cl.problem.setNumericalConstraints ("natural-constraints", cnames)
+                print cnames
+
         def projectOnConstraintsManifold(self, q_in):
 
-                self.wcl.problem.addStaticStabilityConstraints ("balance", q_in , "LLEG_JOINT5", "RLEG_JOINT5")
+                #["balance/relative-com",
+                #"balance/relative-orientation",
+                #"balance/relative-position",
+                #"balance/orientation-left-foot",
+                #"balance/position-left-foot",
 
-                #self.cl.problem.setNumericalConstraints ("balance",
-                                #["balance/relative-com",
-                                #"balance/relative-orientation",
-                                #"balance/relative-position",
-                                #"balance/orientation-left-foot",
-                                #"balance/position-left-foot"])
-                p1 = [0.0,0.0,1.0]
-                p2 = [0.0,0.0,1.0]
-                self.cl.problem.createPositionConstraint ("foot-on-floor", "LLEG_JOINT5", "RLEG_JOINT5", p1, p2)
-                #self.cl.problem.createPositionConstraint ("RARM", "RARM_JOINT5", "", p1, p2)
-                #self.cl.problem.createPositionConstraint ("LARM", "LARM_JOINT5", "", p1, p2)
-
+                print "Projecting configuration q onto constraint manifold ..."
                 status, qproj, residual = self.cl.problem.applyConstraints (q_in)
                 print "Projection Error on constraints manifold: ",residual," successful: ", status
                 return qproj
@@ -62,28 +60,6 @@ class ProjectedVolume ():
                 self.q = self.projectOnConstraintsManifold(self.q)
                 self.setConfig(self.q)
 
-        #def volume_sorted_cvx_hull(self, hull):
-        #        #assume that hull are points on a convex hull, which are sorted
-        #        # counter-clockwise.
-        #        volume = 0
-        #        x1 = numpy.array(hull[0][0],hull[0][1])
-        #        for i in range(0,len(hull)-1):
-        #                x2 = numpy.array(hull[i][0],hull[i][1])
-        #                x3 = numpy.array(hull[i+1][0],hull[i+1][1])
-        #                #vectors between points
-        #                v12 = x2-x1
-        #                v13 = x3-x1
-        #                #compute base length
-        #                b = numpy.linalg.norm(v12)
-        #                #compute height by computing distance of x3 to line
-        #                #between x1 and x2
-        #                h_vec = v13 - numpy.dot(v13,v12)*v12
-        #                h = numpy.linalg.norm(h_vec)
-        #                d = 0.5*b*h
-        #                volume = volume + d
-        #        return volume
-                
-
         def displayConvexHullOfProjectedCapsules(self):
                 self.hull = self.precomputation.getConvexHullCapsules()
                 self.hull = zip(*[iter(self.hull)]*3)
@@ -93,13 +69,20 @@ class ProjectedVolume ():
                 r.sleep()
                 self.scene_publisher.oid = 0
                 #self.scene_publisher.addPolygonFilled(self.hull)
-                self.scene_publisher.addPolygon(self.hull, 0.05)
+                self.scene_publisher.addPolygon(self.hull, 0.02)
+                self.scene_publisher.addWallAroundHole(self.hull)
                 self.scene_publisher.publishObjects()
                 r.sleep()
 
         def projectConfigurationUntilIrreducible(self):
                 self.precomputation.setCurrentConfiguration(self.q)
+                for i in range(1,20):
+                        self.q_new = self.precomputation.projectUntilIrreducibleOneStep()
+                        self.q_new = self.projectOnConstraintsManifold(self.q_new)
+                self.setConfig(self.q_new)
 
+        def projectConfigurationUntilIrreducibleOneStep(self):
+                self.precomputation.setCurrentConfiguration(self.q)
                 self.q_grad = self.precomputation.getGradient()
                 self.q_grad_raw = self.q_grad
                 self.q_grad.insert(3,0)
@@ -111,7 +94,7 @@ class ProjectedVolume ():
                 self.q_grad[4]=0
                 self.q_grad[5]=0
                 self.q_grad[6]=0
-                self.q_new = [x+y for x,y in zip(self.q,self.q_grad)]
+                self.q_new = [x-0.1*y for x,y in zip(self.q,self.q_grad)]
                 print self.q_new[0:8]
                 self.q_new = self.projectOnConstraintsManifold(self.q_new)
                 self.setConfig(self.q_new)

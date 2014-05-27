@@ -4,6 +4,7 @@ SRC_DIR=${DEVEL_DIR}/src
 HPP_SERVER=${DEVEL_DIR}/install/bin/hpp-wholebody-step-server
 #HPP_SERVER=${DEVEL_DIR}/install/bin/hppcorbaserver
 BUILD_TYPE=Debug
+MAKE_CMD=colormake
 
 hpp-corbaserver_branch=master
 hpp-corbaserver_repository=${HPP_REPO_FORK}
@@ -41,5 +42,5 @@ restartserver:
 	mkdir -p build;\
 	cd ${SRC_DIR}/$(@:.build=)/build;\
 	cmake -DCMAKE_INSTALL_PREFIX=${DEVEL_DIR}/install -DHPP_DEBUG=ON -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ..;\
-	make;\
-	make install;
+	${MAKE_CMD};\
+	${MAKE_CMD} install;
