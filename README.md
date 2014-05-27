@@ -32,3 +32,5 @@ Start:
   ipython
   >>> execfile('test_robot_movement.py')
 ```
+
+![hrp2 going through wall](https://raw.githubusercontent.com/orthez/irreducible-configuration-space/master/images/hrp2_irreducible.png)
