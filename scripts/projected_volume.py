@@ -4,8 +4,8 @@ from hpp.corbaserver import Client
 from hpp_corbaserver.hpp import Configuration
 from hpp_ros import ScenePublisher
 from hpp.tools import PathPlayer
-#from hpp.corbaserver.client import Client as WsClient
 from hpp.corbaserver.wholebody_step.client import Client as WsClient
+from hpp.corbaserver.motion_prior.client import Client as MPClient
 from hrp2 import Robot
 import rospy
 import numpy
@@ -16,21 +16,18 @@ class ProjectedVolume ():
                 self.robot_interface = Robot ()
                 self.robot_interface.setTranslationBounds (-3, 3, -3, 3, 0, 1)
                 self.cl = self.robot_interface.client
-                self.wcl = WsClient ()
+                self.mpc = MPClient()
 
                 self.robot = self.cl.robot
-                self.precomputation = self.cl.precomputation
+                self.precomputation = self.mpc.precomputation
 
                 self.scene_publisher = ScenePublisher (self.robot_interface.jointNames [4:])
                 self.q0 = self.robot_interface.getInitialConfig ()
-                self.q1 = [0.0, 0.0, 0.705, 1.0, 0., 0., 0.0, 0.0, 0.0, 0.0, 0.0, -0.4, 0, -1.2, -1.0, 0.0, 0.0, 0.174532, -0.174532, 0.174532, -0.174532, 0.174532, -0.174532, 0.261799, -0.17453, 0.0, -0.523599, 0.0, 0.0, 0.174532, -0.174532, 0.174532, -0.174532, 0.174532, -0.174532, 0.0, 0.0, -0.453786, 0.872665, -0.418879, 0.0, 0.0, 0.0, -0.453786, 0.872665, -0.418879, 0.0]
-                self.q2 = [0.0, 0.0, 0.705, 1, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 1.0, 0, -1.4, -1.0, 0.0, 0.0, 0.174532, -0.174532, 0.174532, -0.174532, 0.174532, -0.174532, 0.261799, -0.17453, 0.0, -0.523599, 0.0, 0.0, 0.174532, -0.174532, 0.174532, -0.174532, 0.174532, -0.174532, 0.0, 0.0, -0.453786, 0.872665, -0.418879, 0.0, 0.0, 0.0, -0.453786, 0.872665, -0.418879, 0.0]
                 self.q = self.q0
                 self.distanceToProjection = 1
                 self.vol_cvx_hull = []
 
-                #self.wcl.problem.addStaticStabilityConstraints ("balance", self.q , "LLEG_JOINT5", "RLEG_JOINT5")
-                cnames = self.cl.precomputation.addNaturalConstraints ( "natural-constraints" , self.q, "LLEG_JOINT5", "RLEG_JOINT5")
+                cnames = self.precomputation.addNaturalConstraints ( "natural-constraints" , self.q, "LLEG_JOINT5", "RLEG_JOINT5")
                 self.cl.problem.setNumericalConstraints ("natural-constraints", cnames)
                 print cnames
 
@@ -41,12 +38,6 @@ class ProjectedVolume ():
                 self.displayConvexHullOfProjectedCapsules()
 
         def projectOnConstraintsManifold(self, q_in):
-
-                #["balance/relative-com",
-                #"balance/relative-orientation",
-                #"balance/relative-position",
-                #"balance/orientation-left-foot",
-                #"balance/position-left-foot",
 
                 print "Projecting configuration q onto constraint manifold ..."
                 status, qproj, residual = self.cl.problem.applyConstraints (q_in)

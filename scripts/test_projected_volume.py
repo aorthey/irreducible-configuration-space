@@ -6,7 +6,6 @@ pv = ProjectedVolume()
 pv.setRandomConfig()
 pv.displayRobot()
 
-
 for i in range(1,10):
   #project to irreducibility => compute capsules => project capsules onto
   #plane => compute convex hull of capsules => display convex hull

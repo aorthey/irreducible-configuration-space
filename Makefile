@@ -1,10 +1,14 @@
 HPP_REPO=https://github.com/humanoid-path-planner
 HPP_REPO_FORK=git@github.com:orthez
 SRC_DIR=${DEVEL_DIR}/src
-HPP_SERVER=${DEVEL_DIR}/install/bin/hpp-wholebody-step-server
+#HPP_SERVER=${DEVEL_DIR}/install/bin/hpp-wholebody-step-server
 #HPP_SERVER=${DEVEL_DIR}/install/bin/hppcorbaserver
+HPP_SERVER=${DEVEL_DIR}/install/bin/hpp-precomputation-corba-server
 BUILD_TYPE=Debug
 MAKE_CMD=colormake
+
+hpp-motion-prior_branch=master
+hpp-motion-prior_repository=${HPP_REPO_FORK}
 
 hpp-corbaserver_branch=master
 hpp-corbaserver_repository=${HPP_REPO_FORK}
@@ -24,8 +28,7 @@ all:
 restartserver:
 	make hpp-corbaserver.build
 	make hpp_ros.build
-	make hpp-wholebody-step.build
-	make hpp-wholebody-step-corba.build
+	make hpp-motion-prior.build
 	gdb -ex run ${HPP_SERVER}
 
 %.install: %.update %.build
