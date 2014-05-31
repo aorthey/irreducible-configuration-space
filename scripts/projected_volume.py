@@ -4,7 +4,6 @@ from hpp.corbaserver import Client
 from hpp_corbaserver.hpp import Configuration
 from hpp_ros import ScenePublisher
 from hpp.tools import PathPlayer
-from hpp.corbaserver.wholebody_step.client import Client as WsClient
 from hpp.corbaserver.motion_prior.client import Client as MPClient
 from hrp2 import Robot
 import rospy
@@ -13,14 +12,19 @@ import math
 
 class ProjectedVolume ():
         def __init__ (self):
+                print "load robot model..."
                 self.robot_interface = Robot ()
                 self.robot_interface.setTranslationBounds (-3, 3, -3, 3, 0, 1)
+                print "load client model..."
                 self.cl = self.robot_interface.client
-                self.mpc = MPClient()
 
-                self.robot = self.cl.robot
+                print "load mpc model..."
+                self.mpc = MPClient()
                 self.precomputation = self.mpc.precomputation
 
+                self.robot = self.cl.robot
+
+                print "load scene model..."
                 self.scene_publisher = ScenePublisher (self.robot_interface.jointNames [4:])
                 self.q0 = self.robot_interface.getInitialConfig ()
                 self.q = self.q0
@@ -52,7 +56,7 @@ class ProjectedVolume ():
                 #set random configuration, but do not change the CoM
                 self.q_old = self.q
                 self.q = self.robot.getRandomConfig()
-                self.q[:8]=self.q_old[:8] 
+                #self.q[:8]=self.q_old[:8] 
 
                 self.q = self.projectOnConstraintsManifold(self.q)
                 self.setConfig(self.q)

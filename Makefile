@@ -6,6 +6,7 @@ SRC_DIR=${DEVEL_DIR}/src
 HPP_SERVER=${DEVEL_DIR}/install/bin/hpp-precomputation-corba-server
 BUILD_TYPE=Debug
 MAKE_CMD=colormake
+GDB_EXEC=/usr/local/bin/gdb
 
 hpp-motion-prior_branch=master
 hpp-motion-prior_repository=${HPP_REPO_FORK}
@@ -29,7 +30,7 @@ restartserver:
 	make hpp-corbaserver.build
 	make hpp_ros.build
 	make hpp-motion-prior.build
-	gdb -ex run ${HPP_SERVER}
+	${GDB_EXEC} -ex run ${HPP_SERVER}
 
 %.install: %.update %.build
 
