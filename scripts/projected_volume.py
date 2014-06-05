@@ -43,22 +43,37 @@ class ProjectedVolume ():
 
         def projectOnConstraintsManifold(self, q_in):
 
-                print "Projecting configuration q onto constraint manifold ..."
                 status, qproj, residual = self.cl.problem.applyConstraints (q_in)
-                print "Projection Error on constraints manifold: ",residual," successful: ", status
-                return qproj
+                if status==False or residual > 0.0001:
+                  print "[WARNING] Projection Error on constraints manifold: ",residual," successful: ", status
+                return qproj, status
 
         def setConfig(self, q_in):
                 self.q = q_in
                 self.robot.setCurrentConfig(self.q)
 
         def setRandomConfig(self):
-                #set random configuration, but do not change the CoM
                 self.q_old = self.q
-                self.q = self.robot.getRandomConfig()
-                #self.q[:8]=self.q_old[:8] 
 
-                self.q = self.projectOnConstraintsManifold(self.q)
+                q_new = self.robot.getRandomConfig()
+                #do not change com
+                q_new[0]=-0.1
+                q_new[1]=0
+                q_new[2]=0.7
+                #90d rotation around z-axis
+                q_new[3]=1
+                q_new[4]=0
+                q_new[5]=0
+                q_new[6]=1
+
+                #q_new, status= self.projectOnConstraintsManifold(q_new)
+
+                #while status==False:
+                #        q_new = self.robot.getRandomConfig()
+                #        q_new, status= self.projectOnConstraintsManifold(q_new)
+
+                self.q_old = q_new
+                self.q = q_new
                 self.setConfig(self.q)
 
         def displayConvexHullOfProjectedCapsules(self):
@@ -75,30 +90,35 @@ class ProjectedVolume ():
                 self.scene_publisher.publishObjects()
                 r.sleep()
 
-        def projectConfigurationUntilIrreducible(self):
+        def projectConfigurationUntilIrreducibleConstraint(self):
                 self.precomputation.setCurrentConfiguration(self.q)
-                for i in range(1,20):
-                        self.q_new = self.precomputation.projectUntilIrreducibleOneStep()
-                        self.q_new = self.projectOnConstraintsManifold(self.q_new)
-                self.setConfig(self.q_new)
+                self.q = self.precomputation.projectUntilIrreducibleConstraint()
+                self.setConfig(self.q)
 
-        def projectConfigurationUntilIrreducibleOneStep(self):
-                self.precomputation.setCurrentConfiguration(self.q)
-                self.q_grad = self.precomputation.getGradient()
-                self.q_grad_raw = self.q_grad
-                self.q_grad.insert(3,0)
-                self.q_grad[0]=0
-                self.q_grad[1]=0
-                self.q_grad[2]=0
-                #make sure that quaternions are not changed
-                self.q_grad[3]=0
-                self.q_grad[4]=0
-                self.q_grad[5]=0
-                self.q_grad[6]=0
-                self.q_new = [x-0.1*y for x,y in zip(self.q,self.q_grad)]
-                print self.q_new[0:8]
-                self.q_new = self.projectOnConstraintsManifold(self.q_new)
-                self.setConfig(self.q_new)
+       # def projectConfigurationUntilIrreducible(self):
+       #         self.precomputation.setCurrentConfiguration(self.q)
+       #         for i in range(1,20):
+       #                 self.q_new = self.precomputation.projectUntilIrreducibleOneStep()
+       #                 self.q_new = self.projectOnConstraintsManifold(self.q_new)
+       #         self.setConfig(self.q_new)
+
+       # def projectConfigurationUntilIrreducibleOneStep(self):
+       #         self.precomputation.setCurrentConfiguration(self.q)
+       #         self.q_grad = self.precomputation.getGradient()
+       #         self.q_grad_raw = self.q_grad
+       #         self.q_grad.insert(3,0)
+       #         self.q_grad[0]=0
+       #         self.q_grad[1]=0
+       #         self.q_grad[2]=0
+       #         #make sure that quaternions are not changed
+       #         self.q_grad[3]=0
+       #         self.q_grad[4]=0
+       #         self.q_grad[5]=0
+       #         self.q_grad[6]=0
+       #         self.q_new = [x-0.1*y for x,y in zip(self.q,self.q_grad)]
+       #         #print self.q_new[0:8]
+       #         self.q_new = self.projectOnConstraintsManifold(self.q_new)
+       #         self.setConfig(self.q_new)
                 
         def displayRobot(self):
                 r = rospy.Rate(1)

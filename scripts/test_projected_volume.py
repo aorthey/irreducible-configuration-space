@@ -7,6 +7,6 @@ for i in range(1,100):
   #project to irreducibility => compute capsules => project capsules onto
   #plane => compute convex hull of capsules => display convex hull
   pv.setRandomConfig()
-  pv.projectConfigurationUntilIrreducible()
+  pv.projectConfigurationUntilIrreducibleConstraint()
   pv.displayRobot()
   pv.displayConvexHullOfProjectedCapsules()
