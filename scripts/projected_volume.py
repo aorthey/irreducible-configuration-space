@@ -1,18 +1,23 @@
 #/usr/bin/env python
 import time
 from hpp.corbaserver import Client
-from hpp_corbaserver.hpp import Configuration
 from hpp_ros import ScenePublisher
-from hpp.tools import PathPlayer
 from hpp.corbaserver.motion_prior.client import Client as MPClient
-from hrp2 import Robot
+from hpp.corbaserver.hrp2 import Robot 
+from hpp.corbaserver import ProblemSolver
+from hpp.corbaserver.wholebody_step.client import Client as WsClient
 import rospy
 import numpy
 import math
 
+
 class ProjectedVolume ():
         def __init__ (self):
                 print "load robot model..."
+                Robot.urdfSuffix = '_capsule'
+                Robot.srdfSuffix= '_capsule'
+                robot = Robot ('hrp2_14')
+
                 self.robot_interface = Robot ()
                 self.robot_interface.setTranslationBounds (-3, 3, -3, 3, 0, 1)
                 print "load client model..."

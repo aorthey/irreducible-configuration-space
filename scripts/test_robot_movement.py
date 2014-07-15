@@ -1,7 +1,7 @@
 #/usr/bin/env python
 import time
 from hpp.corbaserver import Client
-from hpp_corbaserver.hpp import Configuration
+from hpp.corbaserver.hpp import Configuration
 from hpp_ros import ScenePublisher
 from hpp.tools import PathPlayer
 from hpp.corbaserver.client import Client as WsClient

@@ -22,6 +22,7 @@ class Robot (Parent):
     urdfName = "hrp2_14_capsule"
     urdfSuffix = ""
     srdfSuffix = ""
+    tf_root = "base_link"
     packageName = "hrp2_14_description"
     halfSitting = \
         {"base_joint_x": 0.0,

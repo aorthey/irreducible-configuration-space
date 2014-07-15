@@ -6,7 +6,7 @@ SRC_DIR=${DEVEL_DIR}/src
 HPP_SERVER=${DEVEL_DIR}/install/bin/hpp-precomputation-corba-server
 BUILD_TYPE=Debug
 MAKE_CMD=colormake
-GDB_EXEC=/usr/local/bin/gdb
+GDB_EXEC=/usr/bin/gdb
 
 hpp-motion-prior_branch=master
 hpp-motion-prior_repository=${HPP_REPO_FORK}
