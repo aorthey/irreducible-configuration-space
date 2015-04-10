@@ -33,7 +33,7 @@ for i in range(0,10):
     seconds = end_time - start_time
     hours = seconds/3600
     print("--- %s hours   ---" % hours)
-    fname = "../data-traj/rrt-wall-%d-time-%d-%s.tau" %(i,int(hours),str(hours-int(hours))[2:4])
-    
+    minutes = (hours-int(hours))*60
+    fname = "../data-traj/rrt-wall-%d-time-%dh-%sm.tau" %(i,int(hours),int(minutes))
     pathplayer = PathPlayer (client, publisher)
     pathplayer.toFile(1,fname)

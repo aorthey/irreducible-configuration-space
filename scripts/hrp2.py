@@ -19,7 +19,7 @@
 from hpp.corbaserver.robot import Robot as Parent
 
 class Robot (Parent):
-    urdfName = "hrp2_14_capsule"
+    urdfName = "hrp2_14_capsule_irreducible"
     urdfSuffix = ""
     srdfSuffix = ""
     tf_root = "base_link"
